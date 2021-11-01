@@ -8,7 +8,7 @@ namespace eval ::plugins::${plugin_name} {
     variable author "Damian"
     variable contact "via Diaspora"
     variable description "D-Flow is a simple to use advanced profile"
-    variable version 1.4
+    variable version 1.5
     variable min_de1app_version {1.36.7}
 
 
@@ -684,9 +684,6 @@ proc select_flow_curve {} {
         $::Dflow_demo_graph configure -plotbackground #f8f8f8 -background #fff -plotrelief raised
         dui item moveto Dflowset inpor 2270 270
     } else {
-        #$::Dflow_demo_graph axis configure x -color #ddd
-        #$::Dflow_demo_graph grid configure -color #555
-        #$::Dflow_demo_graph configure -plotbackground #2e2e2e -background #3e3e3e -plotrelief raised
         $::Dflow_demo_graph element configure line_espresso_de1_explanation_chart_flow -ydata espresso_de1_explanation_chart_flow_2x
         $::Dflow_demo_graph axis configure x -color #5a5d75
         $::Dflow_demo_graph axis configure y -color #18c37e
@@ -699,62 +696,64 @@ proc select_flow_curve {} {
 }
 
 proc demo_graph { {context {}} } {
-	espresso_de1_explanation_chart_elapsed length 0
-	espresso_de1_explanation_chart_temperature length 0
-	espresso_de1_explanation_chart_temperature_10 length 0
-	espresso_de1_explanation_chart_selected_step length 0
-	espresso_de1_explanation_chart_pressure length 0
-	espresso_de1_explanation_chart_flow length 0
-	espresso_de1_explanation_chart_elapsed_flow length 0
-	espresso_de1_explanation_chart_flow_2x length 0
-	espresso_de1_explanation_chart_pressure append 0
-	espresso_de1_explanation_chart_flow append 0
-	espresso_de1_explanation_chart_elapsed append 0
-	espresso_de1_explanation_chart_elapsed_flow append 0
-    array set props [lindex $::settings(advanced_shot) 0]
-    set c 0
-    while {$c < 11} {
-        incr c
+	set title_test [string range [ifexists ::settings(profile_title)] 0 7]
+    if {$title_test == "D-Flow /" } {
+        espresso_de1_explanation_chart_elapsed length 0
+        espresso_de1_explanation_chart_temperature length 0
+        espresso_de1_explanation_chart_temperature_10 length 0
+        espresso_de1_explanation_chart_selected_step length 0
+        espresso_de1_explanation_chart_pressure length 0
+        espresso_de1_explanation_chart_flow length 0
+        espresso_de1_explanation_chart_elapsed_flow length 0
+        espresso_de1_explanation_chart_flow_2x length 0
+        espresso_de1_explanation_chart_pressure append 0
+        espresso_de1_explanation_chart_flow append 0
+        espresso_de1_explanation_chart_elapsed append 0
+        espresso_de1_explanation_chart_elapsed_flow append 0
+        array set props [lindex $::settings(advanced_shot) 0]
+        set c 0
+        while {$c < 11} {
+            incr c
+            espresso_de1_explanation_chart_temperature append [ifexists props(temperature)]
+            espresso_de1_explanation_chart_temperature_10 append [expr {[ifexists props(temperature)] / 10.0}]
+        }
+        espresso_de1_explanation_chart_pressure append {0.0 0.0 0.0 0.0 2.1 2.8 3.0 3.0 3.0 3.0 3.0}
+        espresso_de1_explanation_chart_flow append {0.0 5.6 7.6 8.3 8.2 6.0 2.9 1.3 0.6 0.4 0.3}
+        espresso_de1_explanation_chart_elapsed append {0.008 0.994 2.03 3.015 4.004 4.994 6.036 7.03 8.017 8.999 15}
+        espresso_de1_explanation_chart_elapsed_flow append {0.008 0.994 2.03 3.015 4.004 4.994 6.036 7.03 8.017 8.999 15}
+        array set props [lindex $::settings(advanced_shot) 2]
+        if {$::settings(final_desired_shot_volume_advanced) > 0 && $::settings(final_desired_shot_volume_advanced) < $::settings(final_desired_shot_weight_advanced)} {
+            set shotendtime [expr {$::settings(final_desired_shot_volume_advanced) / [ifexists props(flow)] + 16}]
+        } else {
+            set shotendtime [expr {$::settings(final_desired_shot_weight_advanced) / [ifexists props(flow)] + 16}]
+        }
         espresso_de1_explanation_chart_temperature append [ifexists props(temperature)]
         espresso_de1_explanation_chart_temperature_10 append [expr {[ifexists props(temperature)] / 10.0}]
-    }
-    espresso_de1_explanation_chart_pressure append {0.0 0.0 0.0 0.0 2.1 2.8 3.0 3.0 3.0 3.0 3.0}
-    espresso_de1_explanation_chart_flow append {0.0 5.6 7.6 8.3 8.2 6.0 2.9 1.3 0.6 0.4 0.3}
-    espresso_de1_explanation_chart_elapsed append {0.008 0.994 2.03 3.015 4.004 4.994 6.036 7.03 8.017 8.999 15}
-    espresso_de1_explanation_chart_elapsed_flow append {0.008 0.994 2.03 3.015 4.004 4.994 6.036 7.03 8.017 8.999 15}
-	array set props [lindex $::settings(advanced_shot) 2]
-	if {$::settings(final_desired_shot_volume_advanced) > 0 && $::settings(final_desired_shot_volume_advanced) < $::settings(final_desired_shot_weight_advanced)} {
-	    set shotendtime [expr {$::settings(final_desired_shot_volume_advanced) / [ifexists props(flow)] + 16}]
-	} else {
-	    set shotendtime [expr {$::settings(final_desired_shot_weight_advanced) / [ifexists props(flow)] + 16}]
-	}
-	espresso_de1_explanation_chart_temperature append [ifexists props(temperature)]
-	espresso_de1_explanation_chart_temperature_10 append [expr {[ifexists props(temperature)] / 10.0}]
-    espresso_de1_explanation_chart_pressure append [ifexists props(max_flow_or_pressure)]
-    espresso_de1_explanation_chart_flow append [ifexists props(flow)]
-    espresso_de1_explanation_chart_temperature append [ifexists props(temperature)]
-    espresso_de1_explanation_chart_temperature_10 append [expr {[ifexists props(temperature)] / 10.0}]
-    espresso_de1_explanation_chart_elapsed append 16
-    espresso_de1_explanation_chart_elapsed_flow append 16
-    espresso_de1_explanation_chart_pressure append [ifexists props(max_flow_or_pressure)]
-    espresso_de1_explanation_chart_flow append [ifexists props(flow)]
-    espresso_de1_explanation_chart_temperature append [ifexists props(temperature)]
-    espresso_de1_explanation_chart_temperature_10 append [expr {[ifexists props(temperature)] / 10.0}]
-    espresso_de1_explanation_chart_elapsed append $shotendtime
-    espresso_de1_explanation_chart_elapsed_flow append $shotendtime
-    foreach f [espresso_de1_explanation_chart_flow range 0 end] {
-		espresso_de1_explanation_chart_flow_2x append [expr {2.0 * $f}]
-	}
-	dui item moveto Dflowset inpoc [expr {1160 + (1120 * 15 / (0.01 + $shotendtime))}] 270
-	dui item moveto Dflowset inpoi [expr {1170 + ((1160 + (1120 * 15 / (0.01 + $shotendtime)) - 1170) / 2)}] 270
-	if {$::settings(D_Flow_graph_style) == "Insight"} {
-        set xcord 2270
-    } else {
-        set xcord 2216
-    }
-	dui item moveto Dflowset inpop [expr {$xcord - (($xcord - (1160 + (1120 * 15 / (0.01 + $shotendtime)))) / 2)}] 270
+        espresso_de1_explanation_chart_pressure append [ifexists props(max_flow_or_pressure)]
+        espresso_de1_explanation_chart_flow append [ifexists props(flow)]
+        espresso_de1_explanation_chart_temperature append [ifexists props(temperature)]
+        espresso_de1_explanation_chart_temperature_10 append [expr {[ifexists props(temperature)] / 10.0}]
+        espresso_de1_explanation_chart_elapsed append 16
+        espresso_de1_explanation_chart_elapsed_flow append 16
+        espresso_de1_explanation_chart_pressure append [ifexists props(max_flow_or_pressure)]
+        espresso_de1_explanation_chart_flow append [ifexists props(flow)]
+        espresso_de1_explanation_chart_temperature append [ifexists props(temperature)]
+        espresso_de1_explanation_chart_temperature_10 append [expr {[ifexists props(temperature)] / 10.0}]
+        espresso_de1_explanation_chart_elapsed append $shotendtime
+        espresso_de1_explanation_chart_elapsed_flow append $shotendtime
+        foreach f [espresso_de1_explanation_chart_flow range 0 end] {
+            espresso_de1_explanation_chart_flow_2x append [expr {2.0 * $f}]
+        }
+        dui item moveto Dflowset inpoc [expr {1160 + (1120 * 15 / (0.01 + $shotendtime))}] 270
+        dui item moveto Dflowset inpoi [expr {1170 + ((1160 + (1120 * 15 / (0.01 + $shotendtime)) - 1170) / 2)}] 270
+        if {$::settings(D_Flow_graph_style) == "Insight"} {
+            set xcord 2270
+        } else {
+            set xcord 2216
+        }
+        dui item moveto Dflowset inpop [expr {$xcord - (($xcord - (1160 + (1120 * 15 / (0.01 + $shotendtime)))) / 2)}] 270
 
-	#::plugins::D_Flow_Espresso_Profile::select_flow_curve
+	}
 }
 
 
