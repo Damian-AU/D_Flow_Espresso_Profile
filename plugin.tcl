@@ -8,7 +8,7 @@ namespace eval ::plugins::${plugin_name} {
     variable author "Damian"
     variable contact "via Diaspora"
     variable description "D-Flow is a simple to use advanced profile"
-    variable version 1.5
+    variable version 1.6
     variable min_de1app_version {1.36.7}
 
 
@@ -593,6 +593,7 @@ if {$::settings(skin) == "DSx"} {
 }
 
 ########## settings_1 page
+set {} {
 add_de1_widget "settings_1" entry 1360 1310  {
     set ::globals(widget_profile_name_to_save) $widget
     bind $widget <Return> { say [translate {save}] $::settings(sound_button_in)
@@ -601,13 +602,14 @@ add_de1_widget "settings_1" entry 1360 1310  {
 } -width [expr {int(38 * $::globals(entry_length_multiplier))}] -font Helv_8  -borderwidth 1 -bg #fbfaff  -foreground #4e85f4 -textvariable ::DFlow_name -relief flat  -highlightthickness 1 -highlightcolor #000000
 
 
-
 dui add dbutton settings_1 2300 1220 \
     -bwidth 250 -bheight 190 \
     -command {
         say [translate {save}] $::settings(sound_button_in)
         ::plugins::D_Flow_Espresso_Profile::save_D-Flow_profile
     }
+}
+
 dui add dbutton "settings_1" 1330 220 2560 800 \
             -bwidth 1230 -bheight 580 \
             -labelvariable {} -label_font [dui font get $font 14] -label_fill $font_colour -label_pos {0.5 0.5} \
