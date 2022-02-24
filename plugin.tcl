@@ -8,7 +8,7 @@ namespace eval ::plugins::${plugin_name} {
     variable author "Damian"
     variable contact "via Diaspora"
     variable description "D-Flow is a simple to use advanced profile"
-    variable version 1.6
+    variable version 1.7
     variable min_de1app_version {1.36.7}
 
 
@@ -501,7 +501,7 @@ add_de1_widget $page_name entry 270 600  {
 ############### Adapted navigation buttons from original settings
 ### tabs
 add_de1_text $page_name 380 100 -text [translate "PRESETS"] -font $settings_tab_font -fill "#7f879a" -anchor "center"
-set ::tab2_profile_label [add_de1_variable $page_name 1010 80 -text "" -font $settings_tab_font -fill "#2d3046"  -justify "center" -anchor "center" -textvariable {[setting_profile_type_to_text]}]
+set ::tab2_profile_label [add_de1_variable $page_name $pos_profile_label 60 -text "" -font $settings_tab_font -fill "#2d3046"  -justify "center" -anchor "center" -textvariable {[setting_profile_type_to_text]}]
 add_de1_variable $page_name 1010 130 -text "" -font Helv_7 -fill "#2d3046"  -justify "center" -anchor "center" -textvariable {[wrapped_profile_title]}
 add_de1_text $page_name 1650 100 -text [translate "MACHINE"] -font $settings_tab_font -fill "#7f879a" -anchor "center"
 add_de1_text $page_name 2270 100 -text [translate "APP"] -font $settings_tab_font -fill "#7f879a" -anchor "center"
@@ -667,6 +667,8 @@ add_de1_widget "settings_1c" graph 1330 300 {
 if {[info exists ::settings(D_Flow_graph_style)] == 0} {
     set ::settings(D_Flow_graph_style) "DSx"
 }
+add_de1_button "settings_1" {say [translate {temperature}] $::settings(sound_button_in); change_espresso_temperature 0.5; profile_has_changed_set } 2380 230 2590 480
+add_de1_button "settings_1" {say [translate {temperature}] $::settings(sound_button_in); change_espresso_temperature -0.5; profile_has_changed_set } 2380 490 2590 800
 
 proc toggle_graph {} {
     if {$::settings(D_Flow_graph_style) == "Insight"} {
