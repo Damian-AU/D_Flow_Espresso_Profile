@@ -6,7 +6,7 @@ namespace eval ::plugins::${plugin_name} {
     variable author "Damian Brakel"
     variable contact "via Diaspora"
     variable description "D-Flow is a simple to use advanced profile"
-    variable version 2.1
+    variable version 2.2
     variable min_de1app_version {1.36.7}
 
 
@@ -219,6 +219,7 @@ if {[file exists "[homedir]/profiles/D-Flow____default.tcl"] != 1} {
 prep
 
 proc update_D-Flow {} {
+    set ::settings(espresso_temperature) $::Dflow_filling_temperature
     array set filling [lindex $::settings(advanced_shot) 0]
     array set soaking [lindex $::settings(advanced_shot) 1]
     array set pouring [lindex $::settings(advanced_shot) 2]
@@ -749,8 +750,6 @@ dui add dbutton $page_set 270 300 \
             fill_skin_listbox
             profile_has_changed_set_colors
             say [translate {Cancel}] $::settings(sound_button_in)
-            #set_next_page off off
-            #page_show off
             fill_advanced_profile_steps_listbox
             restore_espresso_chart
             save_settings_to_de1
@@ -1122,6 +1121,22 @@ proc ::wrapped_profile_title {} {
         return $dft
     } else {
         wrapped_profile_title_default
+    }
+}
+
+rename ::show_settings ::show_settings_D-Flow
+proc ::show_settings { args } {
+    show_settings_D-Flow $args
+    if {$args == "settings_2c"} {
+        set title_test [string range [ifexists ::settings(profile_title)] 0 7]
+        if {$title_test == "D-Flow /" } {
+            ::plugins::D_Flow_Espresso_Profile::prep
+            ::plugins::D_Flow_Espresso_Profile::demo_graph
+            if {$::settings(skin) == "DSx"} {
+                set ::settings(grinder_dose_weight) [round_to_one_digits $::DSx_settings(bean_weight)]
+            }
+            dui page load Dflowset
+        }
     }
 }
 
