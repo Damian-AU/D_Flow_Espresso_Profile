@@ -1124,10 +1124,8 @@ proc ::wrapped_profile_title {} {
     }
 }
 
-rename ::show_settings ::show_settings_D-Flow
-proc ::show_settings { args } {
-    show_settings_D-Flow $args
-    if {$args == "settings_2c"} {
+proc show_d {args} {
+    if {[dui page current] == "settings_2c"} {
         set title_test [string range [ifexists ::settings(profile_title)] 0 7]
         if {$title_test == "D-Flow /" } {
             ::plugins::D_Flow_Espresso_Profile::prep
@@ -1139,5 +1137,6 @@ proc ::show_settings { args } {
         }
     }
 }
+trace add execution show_settings {leave} ::plugins::D_Flow_Espresso_Profile::show_d
 
 }
