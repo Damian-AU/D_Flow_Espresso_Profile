@@ -6,7 +6,7 @@ namespace eval ::plugins::${plugin_name} {
     variable author "Damian Brakel"
     variable contact "via Diaspora"
     variable description "D-Flow is a simple to use advanced profile"
-    variable version 2.2
+    variable version 2.3
     variable min_de1app_version {1.36.7}
 
 
@@ -772,7 +772,9 @@ dui add dbutton $page_set 500 300 \
 dui add dbutton $page_set 85 555 \
     -bwidth 630 -bheight 230 \
     -shape outline -width $button_outline_width -outline $button_outline_colour \
-
+    -command {
+        # do nothing to avoid warning
+    }
 
 dui add dbutton $page_set 100 570 \
     -bwidth 600 -bheight 100 \
@@ -929,14 +931,21 @@ dui add dbutton "settings_1 settings_3 settings_4" 642 0 1277 188 \
             -labelvariable {} -label_font [dui font get $font 12] -label_fill $font_colour -label_pos {0.5 0.5} \
             -command {
             set title_test [string range [ifexists ::settings(profile_title)] 0 7]
-            if {$title_test == "D-Flow /" } {
+            if {$title_test == "A-Flow /" && [info commands ::plugins::A_Flow::prep] ne ""} {
+                ::plugins::A_Flow::prep
+                ::plugins::A_Flow::demo_graph
+                if {$::settings(skin) == "DSx"} {
+                    set ::settings(grinder_dose_weight) [round_to_one_digits $::DSx_settings(bean_weight)]
+                } 
+                dui page load Aflowset
+            } elseif {$title_test == "D-Flow /" } {
                 ::plugins::D_Flow_Espresso_Profile::prep
                 ::plugins::D_Flow_Espresso_Profile::demo_graph
                 if {$::settings(skin) == "DSx"} {
                     set ::settings(grinder_dose_weight) [round_to_one_digits $::DSx_settings(bean_weight)]
                 }
                 dui page load Dflowset
-                } else {
+            } else {
                 after 500 update_de1_explanation_chart
                 say [translate {settings}] $::settings(sound_button_in)
                 set_next_page off $::settings(settings_profile_type)
@@ -980,7 +989,10 @@ add_de1_button $page_set {save_settings_to_de1; set_alarms_for_de1_wake_sleep; s
         set_next_page off message; page_show message
         after 200 app_exit
     } else {
-
+        if {[ifexists ::settings(settings_profile_type)] == "Aflowset"} {
+            # if they were on the LIMITS tab of the Advanced profiles, reset the ui back to the main tab
+            set ::settings(settings_profile_type) "Aflowset"
+        }
         if {[ifexists ::settings(settings_profile_type)] == "Dflowset"} {
             # if they were on the LIMITS tab of the Advanced profiles, reset the ui back to the main tab
             set ::settings(settings_profile_type) "Dflowset"
@@ -1002,10 +1014,20 @@ add_de1_button $page_set {if {[ifexists ::profiles_hide_mode] == 1} { unset -noc
 dui add dbutton settings_1 1100 526 \
     -bwidth 200 -bheight 200 -tags new_profile_button -initial_state hidden \
     -command {
-        ::plugins::D_Flow_Espresso_Profile::prep
-        ::plugins::D_Flow_Espresso_Profile::demo_graph
-        if {$::settings(skin) == "DSx"} {
-            set ::settings(grinder_dose_weight) [round_to_one_digits $::DSx_settings(bean_weight)]
+        if {$title_test == "A-Flow /" && [info commands ::plugins::A_Flow::prep] ne ""} {
+            ::plugins::A_Flow::prep
+            ::plugins::A_Flow::demo_graph
+            if {$::settings(skin) == "DSx"} {
+                set ::settings(grinder_dose_weight) [round_to_one_digits $::DSx_settings(bean_weight)]
+            }
+            dui page load Aflowset
+        } elseif {$title_test == "D-Flow /" } {
+            ::plugins::D_Flow_Espresso_Profile::prep
+            ::plugins::D_Flow_Espresso_Profile::demo_graph
+            if {$::settings(skin) == "DSx"} {
+                set ::settings(grinder_dose_weight) [round_to_one_digits $::DSx_settings(bean_weight)]
+            }
+            dui page load Dflowset
         }
         dui page load Dflowset
     }
@@ -1015,14 +1037,21 @@ dui add dbutton "settings_1" 1330 220 \
     -labelvariable {} -label_font [dui font get $font 12] -label_fill $font_colour -label_pos {0.5 0.5} \
     -command {
     set title_test [string range [ifexists ::settings(profile_title)] 0 7]
-    if {$title_test == "D-Flow /" } {
-        ::plugins::D_Flow_Espresso_Profile::prep
-        ::plugins::D_Flow_Espresso_Profile::demo_graph
+    if {$title_test == "A-Flow /" && [info commands ::plugins::A_Flow::prep] ne ""} {
+        ::plugins::A_Flow::prep
+        ::plugins::A_Flow::demo_graph
         if {$::settings(skin) == "DSx"} {
             set ::settings(grinder_dose_weight) [round_to_one_digits $::DSx_settings(bean_weight)]
         }
-        dui page load Dflowset
-        } else {
+        dui page load Aflowset
+    } elseif {$title_test == "D-Flow /" } {
+                ::plugins::D_Flow_Espresso_Profile::prep
+                ::plugins::D_Flow_Espresso_Profile::demo_graph
+                if {$::settings(skin) == "DSx"} {
+                    set ::settings(grinder_dose_weight) [round_to_one_digits $::DSx_settings(bean_weight)]
+                }
+                dui page load Dflowset
+    } else {
         after 500 update_de1_explanation_chart
         say [translate {settings}] $::settings(sound_button_in)
         set_next_page off $::settings(settings_profile_type)
@@ -1044,14 +1073,21 @@ add_de1_widget "settings_1c" graph 1330 300 {
     $::preview_graph_advanced axis configure y -color #5a5d75 -tickfont Helv_6 -min 0.0 -max 12 -majorticks {1 2 3 4 5 6 7 8 9 10 11 12} -title [translate "Advanced"] -titlefont Helv_8 -titlecolor #5a5d75;
     bind $::preview_graph_advanced [platform_button_press] {
         set title_test [string range [ifexists ::settings(profile_title)] 0 7]
-        if {$title_test == "D-Flow /" } {
-            ::plugins::D_Flow_Espresso_Profile::prep
-            ::plugins::D_Flow_Espresso_Profile::demo_graph
+        if {$title_test == "A-Flow /" && [info commands ::plugins::A_Flow::prep] ne ""} {
+            ::plugins::A_Flow::prep
+            ::plugins::A_Flow::demo_graph
             if {$::settings(skin) == "DSx"} {
                 set ::settings(grinder_dose_weight) [round_to_one_digits $::DSx_settings(bean_weight)]
             }
-            dui page load Dflowset
-            } else {
+            dui page load Aflowset
+        } elseif {$title_test == "D-Flow /" } {
+                ::plugins::D_Flow_Espresso_Profile::prep
+                ::plugins::D_Flow_Espresso_Profile::demo_graph
+                if {$::settings(skin) == "DSx"} {
+                    set ::settings(grinder_dose_weight) [round_to_one_digits $::DSx_settings(bean_weight)]
+                }
+                dui page load Dflowset
+        } else {
             after 500 update_de1_explanation_chart
             say [translate {settings}] $::settings(sound_button_in)
             set_next_page off $::settings(settings_profile_type)
@@ -1092,7 +1128,7 @@ proc ::update_de1_plus_advanced_explanation_chart {} {
 rename ::setting_profile_type_to_text ::setting_profile_type_to_text_default
 proc ::setting_profile_type_to_text {} {
 	set title_test [string range [ifexists ::settings(profile_title)] 0 7]
-    if {$title_test == "D-Flow /" } {
+    if {$title_test == "D-Flow /" || $title_test == "A-Flow /"} {
         dui item show settings_1 new_profile_button*
         $::globals(widget_profile_name_to_save) configure -state disabled
     } else {
@@ -1138,5 +1174,6 @@ proc show_d {args} {
     }
 }
 trace add execution show_settings {leave} ::plugins::D_Flow_Espresso_Profile::show_d
+
 
 }
