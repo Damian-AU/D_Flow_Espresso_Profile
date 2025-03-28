@@ -6,7 +6,7 @@ namespace eval ::plugins::${plugin_name} {
     variable author "Damian Brakel"
     variable contact "via Diaspora"
     variable description "D-Flow is a simple to use advanced profile"
-    variable version 2.3
+    variable version 2.4
     variable min_de1app_version {1.36.7}
 
 
@@ -1012,6 +1012,7 @@ add_de1_button $page_set {if {[ifexists ::profiles_hide_mode] == 1} { unset -noc
 
 ########## settings_1 page
 dui add dbutton settings_1 1100 526 \
+    set title_test [string range [ifexists ::settings(profile_title)] 0 7]
     -bwidth 200 -bheight 200 -tags new_profile_button -initial_state hidden \
     -command {
         if {$title_test == "A-Flow /" && [info commands ::plugins::A_Flow::prep] ne ""} {
