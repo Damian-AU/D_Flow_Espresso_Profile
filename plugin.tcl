@@ -8,7 +8,7 @@ namespace eval ::plugins::${plugin_name} {
     variable author "Damian Brakel"
     variable contact "via Diaspora"
     variable description "D-Flow is a simple to use advanced profile creating and editing tool"
-    variable version 2.5
+    variable version 2.6
     variable min_de1app_version {1.36.7}
 
 
@@ -209,7 +209,52 @@ proc prep { args } {
     }
 }
 
-
+proc write_La_Pavoni_profile {} {
+    set La_Pavoni_data {}
+    append La_Pavoni_data {advanced_shot {{exit_if 1 flow 8 volume 60.00 max_flow_or_pressure_range 0.2 transition fast popup {} exit_flow_under 0 temperature 84.0 weight 0.00 name Filling pressure 1.2 sensor coffee pump pressure exit_type pressure_over exit_flow_over 6 exit_pressure_over 1.2 max_flow_or_pressure 0 seconds 25.00 exit_pressure_under 0} {exit_if 0 flow 8 volume 100.00 max_flow_or_pressure_range 0.2 transition fast exit_flow_under 0 temperature 94.0 weight 0.2 name Infusing pressure 1.2 pump pressure sensor coffee exit_type pressure_over exit_flow_over 6 exit_pressure_over 3.0 max_flow_or_pressure 0 exit_pressure_under 0 seconds 60.0} {exit_if 0 flow 2.4 volume 100 max_flow_or_pressure_range 0.2 transition fast exit_flow_under 0 temperature 94.0 weight 0.00 name Pouring pressure 4.8 pump flow sensor coffee exit_type flow_over exit_flow_over 2.80 exit_pressure_over 11 max_flow_or_pressure 9.0 exit_pressure_under 0 seconds 127}}
+espresso_temperature_steps_enabled 0
+author Damian
+read_only 1
+read_only_backup {}
+espresso_hold_time 16
+preinfusion_time 20
+espresso_pressure 6.0
+espresso_decline_time 30
+pressure_end 4.0
+espresso_temperature 84.0
+espresso_temperature_0 84.0
+espresso_temperature_1 84.0
+espresso_temperature_2 84.0
+espresso_temperature_3 84.0
+settings_profile_type settings_2c
+flow_profile_preinfusion 4
+flow_profile_preinfusion_time 5
+flow_profile_hold 2
+flow_profile_hold_time 8
+flow_profile_decline 1.2
+flow_profile_decline_time 17
+flow_profile_minimum_pressure 4
+preinfusion_flow_rate 4
+profile_notes {}
+final_desired_shot_volume 36
+final_desired_shot_weight 57.0
+final_desired_shot_weight_advanced 46
+tank_desired_water_temperature 0
+final_desired_shot_volume_advanced 0
+profile_title {D-Flow / La Pavoni}
+profile_language en
+preinfusion_stop_pressure 4.0
+profile_hide 0
+final_desired_shot_volume_advanced_count_start 2
+beverage_type espresso
+maximum_pressure 0
+maximum_pressure_range_advanced 0.2
+maximum_flow_range_advanced 0.2
+maximum_flow 0
+maximum_pressure_range_default 0.9
+maximum_flow_range_default 1.0}
+    write_file [homedir]/profiles/D-Flow____La_Pavoni.tcl $La_Pavoni_data
+}
 
 proc write_Q_profile {} {
     set Q_data {}
@@ -255,25 +300,34 @@ maximum_flow_range_advanced 0.2
 maximum_flow 0
 maximum_pressure_range_default 0.9
 maximum_flow_range_default 1.0}
-
     write_file [homedir]/profiles/D-Flow____Q.tcl $Q_data
-
 }
 
 if {[info exists ::settings(D_Flow_update)] == 0} {
     set ::settings(D_Flow_update) 0
 }
 
-if {[file exists "[homedir]/profiles/D-Flow____default.tcl"] != 1 || $::settings(D_Flow_update) < 2 } {
+if { $::settings(D_Flow_update) < 2 || \
+    [file exists "[homedir]/profiles/D-Flow____default.tcl"] != 1 || \
+    [file exists "[homedir]/profiles/D-Flow____Q.tcl"] != 1 || \
+    [file exists "[homedir]/profiles/D-Flow____La_Pavoni.tcl"] != 1  } {
     set ::settings(profile_title) {D-Flow / default}
     set_Dflow_default
     set ::settings(original_profile_title) $::settings(profile_title)
     set ::settings(profile_filename) "D-Flow____default"
     set ::settings(profile_to_save) $::settings(profile_title)
-    set ::settings(D_Flow_update) 1
+    set ::settings(D_Flow_update) 2
     save_profile
     write_Q_profile
+    write_La_Pavoni_profile
 }
+
+if {[file exists "[homedir]/profiles/D-Flow____Q.tcl"] != 1 } {
+    write_Q_profile
+    write_La_Pavoni_profile
+}
+
+
 prep
 
 proc update_D-Flow {} {
@@ -1240,8 +1294,7 @@ add_de1_widget "settings_1c" graph 1330 300 {
                 if {$::settings(skin) == "DSx"} {
                     set ::settings(grinder_dose_weight) [round_to_one_digits $::DSx_settings(bean_weight)]
                 }
-                #dui page load Dflowset
-                dui page load demo
+                dui page load Dflowset
         } else {
             after 500 update_de1_explanation_chart
             say [translate {settings}] $::settings(sound_button_in)
@@ -1297,7 +1350,7 @@ proc save_D-Flow_to_Advanced {} {
 }
 
 
-########
+######## Q
 blt::vector create Q_demo_elapsed Q_demo_pressure Q_demo_flow Q_demo_flow_weight
 
 set ::Q_demo_elapsed {0.028 0.27 0.508 0.746 1.019 1.256 1.498 1.767 2.007 2.25 2.517 2.76 2.997 3.268 3.507 3.754 4.02 4.262 4.501 4.771 5.01 5.248 5.519 5.758 5.998 6.268 6.508 6.752 7.019 7.26 7.5 7.769 8.01 8.25 8.518 8.766 8.997 9.269 9.509 9.748 10.02 10.263 10.497 10.768 11.007 11.249 11.519 11.768 12.002 12.27 12.511 12.749 13.021 13.257 13.501 13.774 14.007 14.278 14.518 14.757 14.999 15.268 15.507 15.748 16.025 16.259 16.5 16.767 17.016 17.248 17.52 17.763 17.997 18.285 18.525 18.747 19.017 19.27 19.503 19.771 20.009 20.256 20.527 20.757 21.001 21.267 21.536}
@@ -1328,6 +1381,37 @@ proc show_Q_demo_graph {} {
 
 ::plugins::D_Flow_Espresso_Profile::hide_Q_demo_graph
 
+######## La_Pavoni
+blt::vector create La_Pavoni_demo_elapsed La_Pavoni_demo_pressure La_Pavoni_demo_flow La_Pavoni_demo_flow_weight
+
+set ::La_Pavoni_demo_elapsed {0.027 0.265 0.504 0.776 1.027 1.254 1.53 1.767 2.007 2.277 2.517 2.756 3.028 3.268 3.505 3.783 4.016 4.254 4.527 4.774 5.006 5.28 5.517 5.755 6.031 6.268 6.507 6.787 7.021 7.257 7.526 7.769 8.037 8.277 8.515 8.784 9.025 9.267 9.535 9.785 10.047 10.287 10.532 10.768 11.046 11.28 11.518 11.788 12.028 12.267 12.537 12.779 13.02 13.285 13.524 13.767 14.036 14.276 14.515 14.787 15.035 15.265 15.54 15.78 16.018 16.287 16.529 16.767 17.037 17.278 17.517 17.789 18.027 18.268 18.537 18.778 19.023 19.286 19.527 19.773 20.035 20.28 20.516 20.785 21.036 21.267 21.536 21.779 22.022 22.286 22.526 22.771 23.038 23.275 23.519 23.79 24.029 24.274 24.537 24.781 25.021 25.287 25.532 25.767 26.04 26.284 26.518 26.789 27.028 27.267 27.535 27.777 28.017 28.285 28.526 28.771 29.037 29.275 29.52 29.785 30.028 30.302 30.537 30.78 31.056 31.287 31.529 31.797 32.037 32.283 32.547 32.789 33.028 33.316 33.559 33.778 34.049 34.286 34.532 34.801 35.038 35.281 35.548 35.792 36.028 36.299 36.535 36.57 36.805 37.078 37.316 37.557 37.827 38.066 38.304 38.586 38.815 39.056 39.332 39.593 39.805 40.078 40.315 40.588 40.831 41.067 41.306 41.576 41.824 42.056 42.329 42.567 42.807 43.078 43.319 43.563 43.831 44.067 44.306 44.584 44.816 45.055 45.329 45.567 45.811 46.076 46.331 46.562 46.827 47.067 47.306 47.578 47.817 48.056 48.332 48.565 48.836 49.077 49.317 49.585 49.826 50.067 50.342 50.576 50.818 51.086 51.331 51.567 51.838 52.076 52.317 52.587 52.828 53.069 53.342 53.577 53.816 54.088 54.337 54.572 54.837 55.085 55.319 55.59 55.826 56.066 56.336 56.581 56.837 57.085 57.328 57.566 57.837 58.075 58.317 58.591 58.844 59.068 59.336}
+set ::La_Pavoni_demo_pressure {0.0 0.05 0.02 0.0 0.03 0.07 0.14 0.34 0.39 0.43 0.51 0.59 0.65 0.75 0.81 0.92 1.03 1.09 1.13 1.18 1.21 1.17 1.15 1.12 1.1 1.06 1.0 0.97 1.01 1.01 0.96 0.92 0.92 0.92 0.9 0.9 0.9 0.88 0.87 0.87 0.87 0.9 0.93 0.91 0.9 0.9 0.89 0.88 0.88 0.87 0.87 0.86 0.91 0.93 0.91 0.9 0.9 0.89 0.88 0.87 0.88 0.88 0.87 0.88 0.9 0.92 0.93 0.94 0.96 0.97 0.99 1.04 1.06 1.11 1.15 1.16 1.18 1.21 1.26 1.3 1.35 1.34 1.35 1.36 1.35 1.34 1.34 1.33 1.33 1.32 1.32 1.31 1.31 1.32 1.32 1.31 1.31 1.31 1.3 1.3 1.3 1.29 1.28 1.26 1.25 1.26 1.26 1.24 1.24 1.22 1.22 1.21 1.2 1.2 1.21 1.21 1.2 1.19 1.19 1.18 1.18 1.18 1.17 1.16 1.15 1.14 1.14 1.14 1.14 1.13 1.13 1.13 1.13 1.12 1.12 1.11 1.1 1.1 1.1 1.09 1.08 1.09 1.08 1.07 1.07 1.07 1.06 1.05 1.05 1.06 1.08 1.1 1.12 1.18 1.19 1.18 1.17 1.17 1.18 1.24 1.4 1.63 1.86 2.04 2.21 2.4 2.64 2.88 3.09 3.31 3.54 3.78 4.05 4.37 4.69 5.02 5.35 5.66 6.0 6.27 6.53 6.79 6.94 7.11 7.21 7.22 7.25 7.25 7.16 7.06 6.96 6.77 6.66 6.56 6.43 6.24 6.18 6.11 6.02 5.88 5.8 5.73 5.67 5.57 5.45 5.44 5.39 5.33 5.27 5.21 5.14 5.09 5.04 5.0 4.95 4.89 4.86 4.83 4.77 4.74 4.69 4.7 4.68 4.69 4.66 4.67 4.64 4.61 4.59 4.6 4.54 4.52 4.53 4.47 4.48 4.47 4.46 4.42 4.38 4.37}
+set ::La_Pavoni_demo_flow {0.0 0.57 1.51 2.83 3.96 4.75 5.39 5.95 6.3 6.57 6.84 7.0 7.26 7.44 7.62 7.61 7.41 7.0 6.45 5.78 5.03 4.32 3.66 3.05 2.53 1.99 1.55 1.27 1.08 0.84 0.66 0.51 0.4 0.31 0.24 0.19 0.15 0.11 0.09 0.07 0.05 0.18 0.16 0.12 0.09 0.07 0.06 0.04 0.03 0.03 0.02 0.05 0.15 0.13 0.1 0.08 0.06 0.05 0.04 0.03 0.02 0.02 0.01 0.01 0.01 0.01 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.05 0.27 0.54 0.83 1.11 1.34 1.55 1.69 1.83 1.95 2.02 2.11 2.2 2.24 2.29 2.37 2.4 2.36 2.39 2.42 2.46 2.46 2.47 2.43 2.43 2.47 2.48 2.49 2.51 2.52 2.52 2.57 2.52 2.55 2.56 2.52 2.49 2.52 2.49 2.47 2.47 2.44 2.39 2.37 2.39 2.38 2.34 2.3 2.33 2.34 2.37 2.31 2.34 2.37 2.34 2.36 2.3 2.33 2.34 2.37 2.35 2.37 2.36 2.35 2.37 2.36 2.38 2.39 2.33 2.33 2.32 2.37 2.31 2.31 2.33 2.34 2.33 2.36 2.33 2.39 2.37 2.37 2.36 2.33 2.35 2.31 2.35 2.36 2.36 2.38 2.4}
+set ::La_Pavoni_demo_flow_weight {0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 -0.03 -0.03 -0.03 -0.03 -0.03 -0.03 -0.03 -0.03 -0.03 -0.03 -0.03 -0.03 -0.03 -0.03 -0.03 -0.03 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.03 0.03 0.03 0.03 0.03 0.03 0.03 0.05 0.05 0.08 0.08 0.1 0.1 0.1 0.1 0.1 0.1 0.08 0.08 0.1 0.1 0.1 0.1 0.08 0.1 0.08 0.1 0.1 0.1 0.13 0.13 0.13 0.15 0.15 0.2 0.2 0.3 0.33 0.45 0.48 0.58 0.71 0.76 0.86 1.01 1.14 1.26 1.39 1.47 1.67 1.77 1.9 1.92 2.12 2.12 2.25 2.3 2.38 2.48 2.5 2.53 2.58 2.63 2.63 2.65 2.65 2.68 2.65 2.68 2.68 2.65 2.65 2.65 2.68 2.65 2.65 2.63 2.63 2.6 2.6 2.6 2.58 2.6 2.58 2.58 2.55 2.58 2.58 2.55 2.55 2.55 2.53 2.53 2.55 2.55 2.58 2.55 2.55 2.53 2.53 2.53 2.53 2.5 2.53 2.53}
+
+
+add_de1_widget "settings_1" graph 1330 300 {
+    set ::La_Pavoni_demo_graph $widget
+    $widget element create line_La_Pavoni_demo_pressure -xdata $::La_Pavoni_demo_elapsed -ydata $::La_Pavoni_demo_pressure  -label "" -linewidth [rescale_x_skin 10] -color #47e098  -smooth $::settings(preview_graph_smoothing_technique) -pixels 0;
+    $widget element create line_La_Pavoni_demo_flow -xdata $::La_Pavoni_demo_elapsed -ydata $::La_Pavoni_demo_flow  -label "" -linewidth [rescale_x_skin 10] -color #98c5ff  -smooth $::settings(preview_graph_smoothing_technique) -pixels 0;
+    $widget element create line_La_Pavoni_demo_flow_weight -xdata $::La_Pavoni_demo_elapsed -ydata $::La_Pavoni_demo_flow_weight  -label "" -linewidth [rescale_x_skin 10] -color #A1663A  -smooth $::settings(preview_graph_smoothing_technique) -pixels 0;
+
+    $::La_Pavoni_demo_graph axis configure x -color #5a5d75 -tickfont Helv_6;
+    $::La_Pavoni_demo_graph axis configure y -color #5a5d75 -tickfont Helv_6 -min 0.0 -max 12 -majorticks {1 2 3 4 5 6 7 8 9 10 11 12} -title [translate "D-Flow"] -titlefont Helv_8 -titlecolor #5a5d75;
+    bind $::La_Pavoni_demo_graph [platform_button_press] {}
+} -plotbackground #fff -width [rescale_x_skin 1050] -height [rescale_y_skin 420] -borderwidth 1 -background #FFFFFF -plotrelief raised  -plotpady 0 -plotpadx 10 -tags La_Pavoni_demo_graph
+
+proc hide_La_Pavoni_demo_graph {} {
+    .can itemconfigure La_Pavoni_demo_graph -state hidden
+    dui item config off La_Pavoni_demo_graph -initial_state hidden
+}
+proc show_La_Pavoni_demo_graph {} {
+    .can itemconfigure La_Pavoni_demo_graph -state normal
+    dui item config off La_Pavoni_demo_graph -initial_state normal
+}
+
+::plugins::D_Flow_Espresso_Profile::hide_La_Pavoni_demo_graph
+
 ################ Mod external code
 if {$::settings(skin) == "DSx"} {
     if {[file exists "[skin_directory]/DSx_Home_Page/DSx_2021_home.page"] == 1 && $::DSx_settings(DSx_home) == "2021home"} {
@@ -1340,11 +1424,13 @@ if {$::settings(skin) == "DSx"} {
     trace add execution load_pinkcup {leave} ::plugins::D_Flow_Espresso_Profile::prep
     trace add execution load_orangecup {leave} ::plugins::D_Flow_Espresso_Profile::prep
 }
+
 set ::Q_profile_notes ""
-
+set ::La_Pavoni_profile_notes ""
 add_de1_variable "settings_1" 1360 900 -text "" -font Helv_6 -fill "#7f879a" -justify "left" -anchor "nw"  -width [rescale_y_skin 1150] -textvariable {$::Q_profile_notes}
+add_de1_variable "settings_1" 1360 900 -text "" -font Helv_6 -fill "#7f879a" -justify "left" -anchor "nw"  -width [rescale_y_skin 1150] -textvariable {$::La_Pavoni_profile_notes}
 dui add dbutton "settings_1" 1350 820 2530 1180 -tags Q_notes_button -initial_state hidden -command{}
-
+dui add dbutton "settings_1" 1350 820 2530 1180 -tags La_Pavoni_notes_button -initial_state hidden -command{}
 
 rename ::update_de1_plus_advanced_explanation_chart ::update_de1_plus_advanced_explanation_chart_default
 proc ::update_de1_plus_advanced_explanation_chart {} {
@@ -1355,17 +1441,34 @@ proc ::update_de1_plus_advanced_explanation_chart {} {
         ::update_de1_plus_advanced_explanation_chart_default
     }
     if {$::settings(profile_title) == "D-Flow / Q" && [dui page current] == "settings_1"} {
+        ::plugins::D_Flow_Espresso_Profile::hide_La_Pavoni_demo_graph
         ::plugins::D_Flow_Espresso_Profile::show_Q_demo_graph
+        set ::La_Pavoni_profile_notes ""
         set ::Q_profile_notes {This is the profile Damian currently uses for every day coffee
+Grind 10um causer than other profiles, more berry flavours from "Xtraction Blend" than Slayer V3 or La Marzocco KB90, same creaminess.
 The Preview graph above shows what a typical shot graph should look like
 
-The goal is to adjust your grind for a pressure peak somewhere between 6 and 9 bar
+The goal is to grind for a pressure peak between 6 and 9 bar
         }
         dui item config settings_1 Q_notes_button* -initial_state normal -state normal
+    } elseif {$::settings(profile_title) == "D-Flow / La Pavoni" && [dui page current] == "settings_1"} {
+        ::plugins::D_Flow_Espresso_Profile::hide_Q_demo_graph
+        ::plugins::D_Flow_Espresso_Profile::show_La_Pavoni_demo_graph
+        set ::Q_profile_notes ""
+        set ::La_Pavoni_profile_notes {Damian created this profile to simulate the results from his La Pavoni machine
+which he profiled side by side with a Slayer V3 for same taste in cup.
+The Preview graph above shows what a typical shot graph should look like
+
+The goal is to grind for a pressure peak between 6 and 9 bar
+        }
+        dui item config settings_1 La_Pavoni_notes_button* -initial_state normal -state normal
     } else {
         ::plugins::D_Flow_Espresso_Profile::hide_Q_demo_graph
+        ::plugins::D_Flow_Espresso_Profile::hide_La_Pavoni_demo_graph
         set ::Q_profile_notes ""
+        set ::La_Pavoni_profile_notes ""
         dui item config settings_1 Q_notes_button* -initial_state hidden -state hidden
+        dui item config settings_1 La_Pavoni_notes_button* -initial_state hidden -state hidden
     }
 }
 
