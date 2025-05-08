@@ -1,12 +1,14 @@
 ### By Damian Brakel ###
+
+set ::protected_d_flow_profiles {default {La Pavoni} Q}
 set plugin_name "D_Flow_Espresso_Profile"
 
 namespace eval ::plugins::${plugin_name} {
     # These are shown in the plugin selection page
     variable author "Damian Brakel"
     variable contact "via Diaspora"
-    variable description "D-Flow is a simple to use advanced profile"
-    variable version 2.4
+    variable description "D-Flow is a simple to use advanced profile creating and editing tool"
+    variable version 2.5
     variable min_de1app_version {1.36.7}
 
 
@@ -39,12 +41,11 @@ The default is 3 bar, the same as used by LRv2, LRv3 profiles and others, it is 
 machines that use preinfusion.
 
 Some manual lever machines like a LA Pavoni have a boiler pressure of 0.8 to 1 bar, infusing is done by raising, fill
-the group with water at boiler pressure. to emulater this you would set a 1 bar infuse pressure.
+the group with water at boiler pressure. to emulater this you would set a 1.2 bar infuse pressure.
+Note: D-Flow allows minimum of 1.2 bar due to prevent unexpected behaviour during high flow
 
-Some machines use pressures anywhere in between.
-
-Other machines may not hold an infusion presure at all, like a common E61 pump machines
-where it apply water straight to extraction pressure, typically 8 or 9 bar.
+Some machines use pressures anywhere in between. Others may not hold an infusion presure at all, like a
+common E61 pump machines, where it apply water straight to extraction pressure, typically 8 or 9 bar.
 }
 
 set info_infuse_stop {
@@ -169,8 +170,8 @@ proc set_Dflow_default {} {
     set ::settings(flow_profile_decline_time) 17
     set ::settings(flow_profile_minimum_pressure) 4
     set ::settings(preinfusion_flow_rate) 4
-    set ::settings(profile_notes) {Damian's D-Flow profile. A simple to use advanced profile
-        By Damian Brakel via https://www.diy.brakel.com.au/}
+    set ::settings(profile_notes) {A simple to use profiling system By Damian Brakel
+        D-Flow's Default profile is provided as an example profile for you to get started in creating your own}
     set ::settings(final_desired_shot_volume) 54
     set ::settings(final_desired_shot_weight) 50
     set ::settings(final_desired_shot_weight_advanced) 50
@@ -208,13 +209,70 @@ proc prep { args } {
     }
 }
 
-if {[file exists "[homedir]/profiles/D-Flow____default.tcl"] != 1} {
+
+
+proc write_Q_profile {} {
+    set Q_data {}
+    append Q_data {advanced_shot {{exit_if 1 flow 8 volume 60.00 max_flow_or_pressure_range 0.2 transition fast exit_flow_under 0 temperature 84.0 weight 0.00 name Filling pressure 6.0 pump pressure sensor coffee exit_type pressure_over exit_flow_over 6 max_flow_or_pressure 0 exit_pressure_over 3.0 seconds 25.00 exit_pressure_under 0} {exit_if 0 flow 8 volume 100.00 max_flow_or_pressure_range 0.2 transition fast exit_flow_under 0 temperature 94.0 weight 0.0 name Infusing pressure 6.0 pump pressure sensor coffee exit_type pressure_over exit_flow_over 6 max_flow_or_pressure 0 exit_pressure_over 3.0 seconds 1.0 exit_pressure_under 0} {exit_if 0 flow 1.8 volume 100 max_flow_or_pressure_range 0.2 transition fast exit_flow_under 0 temperature 94.0 weight 0.00 name Pouring pressure 4.8 pump flow sensor coffee exit_type flow_over exit_flow_over 2.80 max_flow_or_pressure 10.0 exit_pressure_over 11 seconds 127 exit_pressure_under 0}}
+espresso_temperature_steps_enabled 0
+author Damian
+read_only 1
+read_only_backup {}
+espresso_hold_time 16
+preinfusion_time 20
+espresso_pressure 6.0
+espresso_decline_time 30
+pressure_end 4.0
+espresso_temperature 84.0
+espresso_temperature_0 84.0
+espresso_temperature_1 84.0
+espresso_temperature_2 84.0
+espresso_temperature_3 84.0
+settings_profile_type settings_2c
+flow_profile_preinfusion 4
+flow_profile_preinfusion_time 5
+flow_profile_hold 2
+flow_profile_hold_time 8
+flow_profile_decline 1.2
+flow_profile_decline_time 17
+flow_profile_minimum_pressure 4
+preinfusion_flow_rate 8
+profile_notes {}
+final_desired_shot_volume 0
+final_desired_shot_weight 36
+final_desired_shot_weight_advanced 36
+tank_desired_water_temperature 0
+final_desired_shot_volume_advanced 0
+profile_title {D-Flow / Q}
+profile_language en
+preinfusion_stop_pressure 4.0
+profile_hide 0
+final_desired_shot_volume_advanced_count_start 2
+beverage_type espresso
+maximum_pressure 0
+maximum_pressure_range_advanced 0.2
+maximum_flow_range_advanced 0.2
+maximum_flow 0
+maximum_pressure_range_default 0.9
+maximum_flow_range_default 1.0}
+
+    write_file [homedir]/profiles/D-Flow____Q.tcl $Q_data
+
+}
+
+if {[info exists ::settings(D_Flow_update)] == 0} {
+    set ::settings(D_Flow_update) 0
+}
+
+if {[file exists "[homedir]/profiles/D-Flow____default.tcl"] != 1 || $::settings(D_Flow_update) < 2 } {
     set ::settings(profile_title) {D-Flow / default}
     set_Dflow_default
     set ::settings(original_profile_title) $::settings(profile_title)
     set ::settings(profile_filename) "D-Flow____default"
     set ::settings(profile_to_save) $::settings(profile_title)
+    set ::settings(D_Flow_update) 1
     save_profile
+    write_Q_profile
 }
 prep
 
@@ -226,7 +284,7 @@ proc update_D-Flow {} {
     set filling(temperature) $::Dflow_filling_temperature
     set filling(pressure) $::Dflow_soaking_pressure
     set filling(exit_pressure_over) [round_to_one_digits [expr {$::Dflow_soaking_pressure / 2}]]
-    if {$filling(exit_pressure_over) < 0.9} {set filling(exit_pressure_over) 0.9}
+    if {$filling(exit_pressure_over) < 1.2} {set filling(exit_pressure_over) 1.2}
     set soaking(temperature) $::Dflow_pouring_temperature
     set soaking(pressure) $::Dflow_soaking_pressure
     set soaking(seconds) $::Dflow_soaking_seconds
@@ -500,7 +558,7 @@ dui add canvas_item rect $page_name 1720 1386 2020 1436 -fill #ededfa -width 0 -
 dui add canvas_item rect $page_name 2190 1386 2390 1436 -fill #ededfa -width 0 -outline #e9e9ed
 
 ### Settings
-dui add variable $page_name 400 450 -justify center -anchor center -font [dui font get $font 16] -fill #ff574a -textvariable {$::Dflow_message}
+dui add variable $page_name 400 490 -justify center -anchor center -font [dui font get $font 16] -fill #ff574a -textvariable {$::Dflow_message}
 dui add variable $page_name 1000 170 -justify center -anchor center -font [dui font get $font 12] -fill #ff9421 -textvariable {[::plugins::D_Flow_Espresso_Profile::tap_to_update]}
 
 dui add dtext $page_info 1280 520 -justify center -anchor center -font [dui font get $font 16] -fill $font_colour -tags info_intro -text $::plugins::D_Flow_Espresso_Profile::info_intro
@@ -545,22 +603,28 @@ dui add dtext $page_name 2200 1080 -justify center -anchor center -font [dui fon
 dui add dtext $page_name 2380 1080 -justify center -anchor center -font [dui font get $font 12] -fill $font_colour -text {weight}
 dui add variable $page_name 2200 1250 -justify center -anchor center -font [dui font get $font 16] -fill $font_colour -textvariable {[return_stop_at_volume_measurement $::settings(final_desired_shot_volume_advanced)]}
 dui add variable $page_name 2380 1250 -justify center -anchor center -font [dui font get $font 16] -fill $font_colour -textvariable {[::plugins::D_Flow_Espresso_Profile::format_weight_measurement $::settings(final_desired_shot_weight_advanced)]}
-
+################################
 # Bean weight
 dui add dbutton $page_name 100 1050 \
     -bwidth 150 -bheight 200 \
     -label \uf106 -label_font [dui font get "Font Awesome 5 Pro-Regular-400" 18] -label_fill $icon_colour -label_pos {0.5 0.5} \
     -command {
-        set ::settings(grinder_dose_weight) [expr {$::settings(grinder_dose_weight) + 0.1}]
+        set ::settings(grinder_dose_weight) [round_to_one_digits [expr {$::settings(grinder_dose_weight) + 0.1}]]
         set ::DSx_settings(bean_weight) $::settings(grinder_dose_weight)
     }
 dui add dbutton $page_name 100 1250 \
     -bwidth 150 -bheight 200 \
     -label \uf107 -label_font [dui font get "Font Awesome 5 Pro-Regular-400" 18] -label_fill $icon_colour -label_pos {0.5 0.5} \
     -command {
-        set ::settings(grinder_dose_weight) [expr {$::settings(grinder_dose_weight) - 0.1}]
+        set ::settings(grinder_dose_weight) [round_to_one_digits [expr {$::settings(grinder_dose_weight) - 0.1}]]
         if {$::settings(grinder_dose_weight) < 0} {set ::settings(grinder_dose_weight) 0}
         set ::DSx_settings(bean_weight) $::settings(grinder_dose_weight)
+    }
+
+dui add dbutton $page_name 100 1210 \
+    -bwidth 150 -bheight 80 \
+    -command {
+        dui page open_dialog dui_number_editor ::settings(grinder_dose_weight) -n_decimals 1 -min 0 -max 40 -default $::settings(grinder_dose_weight) -smallincrement 0.1 -bigincrement 1 -use_biginc 1 -page_title [translate "Dose weight"] -previous_values [::dui::pages::dui_number_editor::get_previous_values dose] -return_callback "dflow_callback3 callback_after_adv_profile_data_entry dose"
     }
 
 # Fill Temperature
@@ -579,6 +643,11 @@ dui add dbutton $page_name 340 1250 \
         if {$::Dflow_filling_temperature < 80} {set ::Dflow_filling_temperature 80}
         ::plugins::D_Flow_Espresso_Profile::update_D-Flow
     }
+dui add dbutton $page_name 340 1210 \
+    -bwidth 150 -bheight 80 \
+    -command {
+        dui page open_dialog dui_number_editor ::Dflow_filling_temperature -n_decimals 0 -min 80 -max 105 -default $::Dflow_filling_temperature -smallincrement 1 -bigincrement 10 -use_biginc 1 -page_title [translate "Infuse Temperature"] -previous_values [::dui::pages::dui_number_editor::get_previous_values temp] -return_callback "dflow_callback callback_after_adv_profile_data_entry temp"
+    }
 
 # Soaking flow pressure
 dui add dbutton $page_name 580 1050 \
@@ -593,8 +662,13 @@ dui add dbutton $page_name 580 1250 \
     -label \uf107 -label_font [dui font get "Font Awesome 5 Pro-Regular-400" 18] -label_fill $icon_colour -label_pos {0.5 0.5} \
     -command {
         set ::Dflow_soaking_pressure [round_to_one_digits [expr {$::Dflow_soaking_pressure - 0.1}]]
-        if {$::Dflow_soaking_pressure < 0.4} {set ::Dflow_soaking_pressure 0.4}
+        if {$::Dflow_soaking_pressure < 1.2} {set ::Dflow_soaking_pressure 1.2}
         ::plugins::D_Flow_Espresso_Profile::update_D-Flow
+    }
+dui add dbutton $page_name 580 1210 \
+    -bwidth 150 -bheight 80 \
+    -command {
+        dui page open_dialog dui_number_editor ::Dflow_soaking_pressure -n_decimals 1 -min 1.2 -max 12 -default $::Dflow_soaking_pressure -smallincrement 0.1 -bigincrement 1 -use_biginc 1 -page_title [translate "Infuse Pressure"] -previous_values [::dui::pages::dui_number_editor::get_previous_values pressure] -return_callback "dflow_callback callback_after_adv_profile_data_entry pressure"
     }
 
 # Move on buttons
@@ -613,6 +687,11 @@ dui add dbutton $page_name 820 1250 \
         if {$::Dflow_soaking_seconds < 0} {set :::Dflow_soaking_seconds 0}
         ::plugins::D_Flow_Espresso_Profile::update_D-Flow
     }
+dui add dbutton $page_name 820 1210 \
+    -bwidth 150 -bheight 80 \
+    -command {
+        dui page open_dialog dui_number_editor ::Dflow_soaking_seconds -n_decimals 0 -min 1 -max 127 -default $::Dflow_soaking_seconds -smallincrement 1 -bigincrement 10 -use_biginc 1 -page_title [translate "Maximum Infuse Time (seconds)"] -previous_values [::dui::pages::dui_number_editor::get_previous_values time] -return_callback "dflow_callback callback_after_adv_profile_data_entry time"
+    }
 
 dui add dbutton $page_name 1000 1050 \
     -bwidth 180 -bheight 200 -tags soak_volume_up \
@@ -629,6 +708,11 @@ dui add dbutton $page_name 1000 1250 \
         if {$::Dflow_soaking_volume < 0} {set ::Dflow_soaking_volume 0}
         ::plugins::D_Flow_Espresso_Profile::update_D-Flow
     }
+dui add dbutton $page_name 1000 1210 \
+    -bwidth 150 -bheight 80 \
+    -command {
+        dui page open_dialog dui_number_editor ::Dflow_soaking_volume -n_decimals 0 -min 80 -max 100 -default $::Dflow_soaking_volume -smallincrement 1 -bigincrement 10 -use_biginc 1 -page_title [translate "Maximum Infuse Volume"] -previous_values [::dui::pages::dui_number_editor::get_previous_values volume] -return_callback "dflow_callback callback_after_adv_profile_data_entry volume"
+    }
 
 dui add dbutton $page_name 1180 1050 \
     -bwidth 180 -bheight 200 -tags soak_weight_up \
@@ -644,6 +728,11 @@ dui add dbutton $page_name 1180 1250 \
         set ::Dflow_soaking_weight [round_to_one_digits [expr {$::Dflow_soaking_weight - 0.2}]]
         if {$::Dflow_soaking_weight < 0} {set ::Dflow_soaking_weight 0}
         ::plugins::D_Flow_Espresso_Profile::update_D-Flow
+    }
+dui add dbutton $page_name 1180 1210 \
+    -bwidth 150 -bheight 80 \
+    -command {
+        dui page open_dialog dui_number_editor ::Dflow_soaking_weight -n_decimals 1 -min 0 -max 500 -default $::Dflow_soaking_weight -smallincrement 0.1 -bigincrement 1 -use_biginc 1 -page_title [translate "Maximum Infuse Weight"] -previous_values [::dui::pages::dui_number_editor::get_previous_values weight] -return_callback "dflow_callback callback_after_adv_profile_data_entry weight"
     }
 
 # pour buttons
@@ -662,6 +751,11 @@ dui add dbutton $page_name 1450 1250 \
         if {$::Dflow_pouring_temperature < 0} {set ::Dflow_pouring_temperature 0}
         ::plugins::D_Flow_Espresso_Profile::update_D-Flow
     }
+dui add dbutton $page_name 1450 1210 \
+    -bwidth 1450 -bheight 80 \
+    -command {
+        dui page open_dialog dui_number_editor ::Dflow_pouring_temperature -n_decimals 0 -min 80 -max 105 -default $::Dflow_pouring_temperature -smallincrement 1 -bigincrement 10 -use_biginc 1 -page_title [translate "Pour Temperature"] -previous_values [::dui::pages::dui_number_editor::get_previous_values temp] -return_callback "dflow_callback callback_after_adv_profile_data_entry temp"
+    }
 
 dui add dbutton $page_name 1690 1050 \
     -bwidth 180 -bheight 200 -tags pouring_flow_up \
@@ -678,6 +772,11 @@ dui add dbutton $page_name 1690 1250 \
         if {$::Dflow_pouring_flow < 0.1} {set ::Dflow_pouring_flow 0.1}
         ::plugins::D_Flow_Espresso_Profile::update_D-Flow
     }
+dui add dbutton $page_name 1690 1210 \
+    -bwidth 150 -bheight 80 \
+    -command {
+        dui page open_dialog dui_number_editor ::Dflow_pouring_flow -n_decimals 1 -min 0.1 -max 8 -default $::Dflow_pouring_flow -smallincrement 0.1 -bigincrement 1 -use_biginc 1 -page_title [translate "Maximum Pour Flow rate"] -previous_values [::dui::pages::dui_number_editor::get_previous_values flow] -return_callback "dflow_callback callback_after_adv_profile_data_entry flow"
+    }
 
 dui add dbutton $page_name 1870 1050 \
     -bwidth 180 -bheight 200 -tags pouring_pressure_up \
@@ -693,6 +792,11 @@ dui add dbutton $page_name 1870 1250 \
         set ::Dflow_pouring_pressure [round_to_one_digits [expr {$::Dflow_pouring_pressure - 0.1}]]
         if {$::Dflow_pouring_pressure < 0} {set ::Dflow_pouring_pressure 0}
         ::plugins::D_Flow_Espresso_Profile::update_D-Flow
+    }
+dui add dbutton $page_name 1870 1210 \
+    -bwidth 150 -bheight 80 \
+    -command {
+        dui page open_dialog dui_number_editor ::Dflow_pouring_pressure -n_decimals 1 -min 1 -max 12 -default $::Dflow_pouring_pressure -smallincrement 0.1 -bigincrement 1 -use_biginc 1 -page_title [translate "Maximum Pour Pressure"] -previous_values [::dui::pages::dui_number_editor::get_previous_values pressure] -return_callback "dflow_callback callback_after_adv_profile_data_entry pressure"
     }
 
 # stop
@@ -714,6 +818,11 @@ dui add dbutton $page_name 2110 1250 \
         profile_has_changed_set
         ::plugins::D_Flow_Espresso_Profile::demo_graph
     }
+dui add dbutton $page_name 2110 1210 \
+    -bwidth 150 -bheight 80 \
+    -command {
+        dui page open_dialog dui_number_editor ::settings(final_desired_shot_volume_advanced) -n_decimals 0 -min 0 -max 1000 -default $::settings(final_desired_shot_volume_advanced) -smallincrement 1 -bigincrement 10 -use_biginc 1 -page_title [translate "Maximum Pour Volume"] -previous_values [::dui::pages::dui_number_editor::get_previous_values sav] -return_callback "dflow_callback2 callback_after_adv_profile_data_entry sav"
+    }
 
 dui add dbutton $page_name 2290 1050 \
     -bwidth 180 -bheight 200 -tags SAW_up \
@@ -733,7 +842,27 @@ dui add dbutton $page_name 2290 1250 \
         profile_has_changed_set
         ::plugins::D_Flow_Espresso_Profile::demo_graph
     }
+dui add dbutton $page_name 2290 1210 \
+    -bwidth 150 -bheight 80 \
+    -command {
+        dui page open_dialog dui_number_editor ::settings(final_desired_shot_weight_advanced) -n_decimals 0 -min 0 -max 1000 -default $::settings(final_desired_shot_weight_advanced) -smallincrement 1 -bigincrement 10 -use_biginc 1 -page_title [translate "Maximum Pour Weight"] -previous_values [::dui::pages::dui_number_editor::get_previous_values saw] -return_callback "dflow_callback2 callback_after_adv_profile_data_entry saw"
+    }
+proc ::dflow_callback {nextproc context data} {
+    ::plugins::D_Flow_Espresso_Profile::update_D-Flow
+    ::dui::pages::dui_number_editor::save_previous_value $nextproc $context $data
+}
 
+proc ::dflow_callback2 {nextproc context data} {
+    range_check_shot_variables
+    profile_has_changed_set
+    ::plugins::D_Flow_Espresso_Profile::demo_graph
+    ::dui::pages::dui_number_editor::save_previous_value $nextproc $context $data
+}
+
+proc ::dflow_callback3 {nextproc context data} {
+    set ::DSx_settings(bean_weight) $::settings(grinder_dose_weight)
+    ::dui::pages::dui_number_editor::save_previous_value $nextproc $context $data
+}
 ### reset changes
 dui add dbutton $page_set 270 300 \
     -bwidth 210 -bheight 160 \
@@ -755,9 +884,12 @@ dui add dbutton $page_set 270 300 \
             save_settings_to_de1
             fill_profiles_listbox
             fill_extensions_listbox
+            #::plugins::D_Flow_Espresso_Profile::update_D-Flow
+            ::plugins::D_Flow_Espresso_Profile::demo_graph
         }
 
 ### set defaults
+set {} {
 dui add dbutton $page_set 500 300 \
     -bwidth 210 -bheight 160 \
     -shape outline -width $button_outline_width -outline $button_outline_colour \
@@ -767,6 +899,7 @@ dui add dbutton $page_set 500 300 \
         ::plugins::D_Flow_Espresso_Profile::demo_graph
         set ::settings(profile_has_changed) 1
     }
+}
 
 ### Save as
 dui add dbutton $page_set 85 555 \
@@ -921,9 +1054,29 @@ add_de1_variable $page_name 1010 130 -text "" -font Helv_7 -fill "#2d3046"  -jus
 add_de1_text $page_name 1650 100 -text [translate "MACHINE"] -font $settings_tab_font -fill "#7f879a" -anchor "center"
 add_de1_text $page_name 2270 100 -text [translate "APP"] -font $settings_tab_font -fill "#7f879a" -anchor "center"
 add_de1_button $page_set {after 500 update_de1_explanation_chart; say [translate {settings}] $::settings(sound_button_in); set_next_page off "settings_1"; page_show off; set ::settings(active_settings_tab) "settings_1"; set_profiles_scrollbar_dimensions} 0 0 641 188
-add_de1_button $page_name {say [translate {save}] $::settings(sound_button_in); set ::settings(original_profile_title) $::settings(profile_title); if {$::settings(profile_has_changed) == 1} { borg toast [translate "Saved"]; save_profile; ::plugins::D_Flow_Espresso_Profile::demo_graph} } 642 0 1277 188
+#add_de1_button $page_name {say [translate {save}] $::settings(sound_button_in); set ::settings(original_profile_title) $::settings(profile_title); if {$::settings(profile_has_changed) == 1} { borg toast [translate "Saved"]; save_profile; ::plugins::D_Flow_Espresso_Profile::demo_graph} } 642 0 1277 188
 add_de1_button $page_set {say [translate {settings}] $::settings(sound_button_in); set_next_page off settings_3; page_show settings_3; scheduler_feature_hide_show_refresh; set ::settings(active_settings_tab) "settings_3"} 1278 0 1904 188
 add_de1_button $page_set {say [translate {settings}] $::settings(sound_button_in); set_next_page off settings_4; page_show settings_4; set ::settings(active_settings_tab) "settings_4"; set_ble_scrollbar_dimensions; set_ble_scale_scrollbar_dimensions} 1905 0 2560 188
+
+#set ::dflow_name_test [string range [ifexists ::settings(profile_title)] 9 end]
+#add_de1_variable $page_name 1010 160 -text "" -font Helv_7 -fill "#2d3046"  -justify "center" -anchor "center" -textvariable {$::dflow_name_test}
+
+dui add dbutton $page_name 642 0 \
+    -bwidth 635 -bheight 188 \
+    -command {
+        if {$::settings(profile_has_changed) == 1} {
+            set dflow_name_test [string range [ifexists ::settings(profile_title)] 9 end]
+            if {$dflow_name_test in $::protected_d_flow_profiles == 1 } {
+                set ::Dflow_message "$::settings(profile_title)\r[translate "is a protected profiles"]\r[translate "save as new file instead"]"
+                after 3000 {set ::Dflow_message ""}
+            } else {
+                set ::settings(original_profile_title) $::settings(profile_title)
+                borg toast [translate "Saved"]
+                save_profile
+                ::plugins::D_Flow_Espresso_Profile::demo_graph
+            }
+        }
+    }
 
 ########## setting_2 tab button
 dui add dbutton "settings_1 settings_3 settings_4" 642 0 1277 188 \
@@ -936,7 +1089,7 @@ dui add dbutton "settings_1 settings_3 settings_4" 642 0 1277 188 \
                 ::plugins::A_Flow::demo_graph
                 if {$::settings(skin) == "DSx"} {
                     set ::settings(grinder_dose_weight) [round_to_one_digits $::DSx_settings(bean_weight)]
-                } 
+                }
                 dui page load Aflowset
             } elseif {$title_test == "D-Flow /" } {
                 ::plugins::D_Flow_Espresso_Profile::prep
@@ -1012,9 +1165,9 @@ add_de1_button $page_set {if {[ifexists ::profiles_hide_mode] == 1} { unset -noc
 
 ########## settings_1 page
 dui add dbutton settings_1 1100 526 \
-    set title_test [string range [ifexists ::settings(profile_title)] 0 7]
     -bwidth 200 -bheight 200 -tags new_profile_button -initial_state hidden \
     -command {
+        set title_test [string range [ifexists ::settings(profile_title)] 0 7]
         if {$title_test == "A-Flow /" && [info commands ::plugins::A_Flow::prep] ne ""} {
             ::plugins::A_Flow::prep
             ::plugins::A_Flow::demo_graph
@@ -1087,7 +1240,8 @@ add_de1_widget "settings_1c" graph 1330 300 {
                 if {$::settings(skin) == "DSx"} {
                     set ::settings(grinder_dose_weight) [round_to_one_digits $::DSx_settings(bean_weight)]
                 }
-                dui page load Dflowset
+                #dui page load Dflowset
+                dui page load demo
         } else {
             after 500 update_de1_explanation_chart
             say [translate {settings}] $::settings(sound_button_in)
@@ -1103,6 +1257,77 @@ add_de1_widget "settings_1c" graph 1330 300 {
 add_de1_button "settings_1" {say [translate {temperature}] $::settings(sound_button_in); change_espresso_temperature 0.5; profile_has_changed_set } 2380 230 2590 480
 add_de1_button "settings_1" {say [translate {temperature}] $::settings(sound_button_in); change_espresso_temperature -0.5; profile_has_changed_set } 2380 490 2590 800
 
+
+##### Profile Conversion code
+
+dui add dbutton Dflowset 0 1450 \
+    -bwidth 200 -bheight 150 \
+    -command {
+        if {[.can itemcget dflow_convert -state] eq "hidden"} {
+            dui item config Dflowset dflow_convert* -initial_state normal -state normal
+        } else {
+            dui item config Dflowset dflow_convert* -initial_state hidden -state hidden
+        }
+    }
+
+dui add dbutton Dflowset 760 570 \
+    -bwidth 210 -bheight 160 -tags dflow_convert -initial_state hidden \
+    -shape outline -width 2 -outline #eee \
+    -label "convert to\rAdvanced\rprofile" -label_font [dui font get Roboto-Regular 14] -label_fill #7f879a -label_pos {0.5 0.5} \
+    -command {
+        save_D-Flow_to_Advanced
+    }
+
+proc save_D-Flow_to_Advanced {} {
+    if {$::DFlow_name == ""} {
+        set ::Dflow_message "we need a profile name"
+        after 1200 {set ::Dflow_message ""}
+        return
+    }
+    set profile_filename $::DFlow_name
+    if {[file exists "[homedir]/profiles/${profile_filename}.tcl"] != 1} {
+        set ::settings(profile_title) $::DFlow_name;
+        borg toast [translate "D-Flow converted to Advance"]
+        save_profile
+        dui page load settings_2c
+    } else {
+        set ::Dflow_message "$::DFlow_name [translate "already exists"]"
+        after 1200 {set ::Dflow_message ""}
+    }
+}
+
+
+########
+blt::vector create Q_demo_elapsed Q_demo_pressure Q_demo_flow Q_demo_flow_weight
+
+set ::Q_demo_elapsed {0.028 0.27 0.508 0.746 1.019 1.256 1.498 1.767 2.007 2.25 2.517 2.76 2.997 3.268 3.507 3.754 4.02 4.262 4.501 4.771 5.01 5.248 5.519 5.758 5.998 6.268 6.508 6.752 7.019 7.26 7.5 7.769 8.01 8.25 8.518 8.766 8.997 9.269 9.509 9.748 10.02 10.263 10.497 10.768 11.007 11.249 11.519 11.768 12.002 12.27 12.511 12.749 13.021 13.257 13.501 13.774 14.007 14.278 14.518 14.757 14.999 15.268 15.507 15.748 16.025 16.259 16.5 16.767 17.016 17.248 17.52 17.763 17.997 18.285 18.525 18.747 19.017 19.27 19.503 19.771 20.009 20.256 20.527 20.757 21.001 21.267 21.536}
+set ::Q_demo_pressure {0.0 0.69 0.77 0.79 0.85 0.83 0.85 0.9 0.86 0.89 0.94 0.98 1.03 1.09 1.14 1.19 1.27 1.36 1.46 1.59 1.76 1.96 2.27 2.68 3.14 3.66 4.27 5.01 5.7 6.27 6.76 7.13 7.41 7.57 7.65 7.67 7.66 7.6 7.56 7.47 7.38 7.26 7.1 6.96 6.82 6.68 6.49 6.34 6.19 6.03 5.87 5.76 5.61 5.46 5.37 5.24 5.12 5.02 4.94 4.86 4.77 4.71 4.63 4.58 4.52 4.45 4.4 4.35 4.31 4.25 4.21 4.18 4.15 4.22 4.07 4.11 4.09 4.07 4.03 4.0 4.0 3.98 4.01 3.97 3.92 3.89 3.92 3.92}
+set ::Q_demo_flow {0.0 6.84 7.11 7.41 7.55 7.66 7.89 7.94 7.96 8.04 8.04 8.04 8.04 8.04 8.04 8.04 8.04 7.98 7.97 7.95 7.88 7.86 7.79 7.68 7.58 7.46 7.29 7.12 6.86 6.4 5.75 5.12 4.5 3.98 3.52 3.15 2.84 2.59 2.4 2.26 2.16 2.05 1.98 1.94 1.89 1.85 1.83 1.83 1.8 1.79 1.78 1.77 1.77 1.77 1.78 1.76 1.77 1.77 1.77 1.76 1.78 1.76 1.79 1.79 1.78 1.77 1.78 1.79 1.79 1.79 1.79 1.79 1.87 1.79 1.79 1.79 1.82 1.82 1.82 1.84 1.81 1.8 1.8 1.8 1.82 1.84 1.8 1.77}
+set ::Q_demo_flow_weight {0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.18 0.43 0.61 0.81 0.94 1.09 1.32 1.45 1.6 1.7 1.83 1.93 2.0 2.16 2.23 2.31 2.31 2.26 2.24 2.23 2.22 2.20 2.19 2.18 2.17 2.16 2.15 2.14 2.13 2.12 2.11 2.1 2.1 2.1 2.1 2.1 2.1 2.1 2.1 2.1 2.1 2.1 2.1 2.1 2.1 2.1 2.1 2.1 2.1 2.1 2.1 2.1 2.1 2.1 2.1 2.1 2.1 2.1 2.03 2.1 2.1 2.1 2.1}
+
+
+add_de1_widget "settings_1" graph 1330 300 {
+    set ::Q_demo_graph $widget
+    $widget element create line_Q_demo_pressure -xdata $::Q_demo_elapsed -ydata $::Q_demo_pressure  -label "" -linewidth [rescale_x_skin 10] -color #47e098  -smooth $::settings(preview_graph_smoothing_technique) -pixels 0;
+    $widget element create line_Q_demo_flow -xdata $::Q_demo_elapsed -ydata $::Q_demo_flow  -label "" -linewidth [rescale_x_skin 10] -color #98c5ff  -smooth $::settings(preview_graph_smoothing_technique) -pixels 0;
+    $widget element create line_Q_demo_flow_weight -xdata $::Q_demo_elapsed -ydata $::Q_demo_flow_weight  -label "" -linewidth [rescale_x_skin 10] -color #A1663A  -smooth $::settings(preview_graph_smoothing_technique) -pixels 0;
+
+    $::Q_demo_graph axis configure x -color #5a5d75 -tickfont Helv_6;
+    $::Q_demo_graph axis configure y -color #5a5d75 -tickfont Helv_6 -min 0.0 -max 12 -majorticks {1 2 3 4 5 6 7 8 9 10 11 12} -title [translate "D-Flow"] -titlefont Helv_8 -titlecolor #5a5d75;
+    bind $::Q_demo_graph [platform_button_press] {}
+} -plotbackground #fff -width [rescale_x_skin 1050] -height [rescale_y_skin 420] -borderwidth 1 -background #FFFFFF -plotrelief raised  -plotpady 0 -plotpadx 10 -tags Q_demo_graph
+
+proc hide_Q_demo_graph {} {
+    .can itemconfigure Q_demo_graph -state hidden
+    dui item config off Q_demo_graph -initial_state hidden
+}
+proc show_Q_demo_graph {} {
+    .can itemconfigure Q_demo_graph -state normal
+    dui item config off Q_demo_graph -initial_state normal
+}
+
+::plugins::D_Flow_Espresso_Profile::hide_Q_demo_graph
+
 ################ Mod external code
 if {$::settings(skin) == "DSx"} {
     if {[file exists "[skin_directory]/DSx_Home_Page/DSx_2021_home.page"] == 1 && $::DSx_settings(DSx_home) == "2021home"} {
@@ -1115,6 +1340,11 @@ if {$::settings(skin) == "DSx"} {
     trace add execution load_pinkcup {leave} ::plugins::D_Flow_Espresso_Profile::prep
     trace add execution load_orangecup {leave} ::plugins::D_Flow_Espresso_Profile::prep
 }
+set ::Q_profile_notes ""
+
+add_de1_variable "settings_1" 1360 900 -text "" -font Helv_6 -fill "#7f879a" -justify "left" -anchor "nw"  -width [rescale_y_skin 1150] -textvariable {$::Q_profile_notes}
+dui add dbutton "settings_1" 1350 820 2530 1180 -tags Q_notes_button -initial_state hidden -command{}
+
 
 rename ::update_de1_plus_advanced_explanation_chart ::update_de1_plus_advanced_explanation_chart_default
 proc ::update_de1_plus_advanced_explanation_chart {} {
@@ -1123,6 +1353,19 @@ proc ::update_de1_plus_advanced_explanation_chart {} {
         ::plugins::D_Flow_Espresso_Profile::demo_graph
     } else {
         ::update_de1_plus_advanced_explanation_chart_default
+    }
+    if {$::settings(profile_title) == "D-Flow / Q" && [dui page current] == "settings_1"} {
+        ::plugins::D_Flow_Espresso_Profile::show_Q_demo_graph
+        set ::Q_profile_notes {This is the profile Damian currently uses for every day coffee
+The Preview graph above shows what a typical shot graph should look like
+
+The goal is to adjust your grind for a pressure peak somewhere between 6 and 9 bar
+        }
+        dui item config settings_1 Q_notes_button* -initial_state normal -state normal
+    } else {
+        ::plugins::D_Flow_Espresso_Profile::hide_Q_demo_graph
+        set ::Q_profile_notes ""
+        dui item config settings_1 Q_notes_button* -initial_state hidden -state hidden
     }
 }
 
@@ -1176,5 +1419,19 @@ proc show_d {args} {
 }
 trace add execution show_settings {leave} ::plugins::D_Flow_Espresso_Profile::show_d
 
+dui add dbutton settings_1 2300 1220 \
+    -bwidth 250 -bheight 190 \
+    -command {
+        set title_test [string range [ifexists ::settings(profile_title)] 0 7]
+        if {$title_test != "D-Flow /" } {
+            popup [translate "Saved"]
+            save_profile
+        } else {
+            popup [translate "disabled for D-Flow profiles"]
+        }
+    }
 
 }
+
+
+
