@@ -8,7 +8,7 @@ namespace eval ::plugins::${plugin_name} {
     variable author "Damian Brakel"
     variable contact "via Diaspora"
     variable description "D-Flow is a simple to use advanced profile creating and editing tool"
-    variable version 2.6
+    variable version 2.7
     variable min_de1app_version {1.36.7}
 
 
@@ -337,7 +337,11 @@ proc update_D-Flow {} {
     array set pouring [lindex $::settings(advanced_shot) 2]
     set filling(temperature) $::Dflow_filling_temperature
     set filling(pressure) $::Dflow_soaking_pressure
-    set filling(exit_pressure_over) [round_to_one_digits [expr {$::Dflow_soaking_pressure / 2}]]
+    if {$::Dflow_soaking_pressure < 2.8} {
+        set filling(exit_pressure_over) $::Dflow_soaking_pressure
+    } else {
+        set filling(exit_pressure_over) [round_to_one_digits [expr {($::Dflow_soaking_pressure / 2) + 0.5}]]
+    }
     if {$filling(exit_pressure_over) < 1.2} {set filling(exit_pressure_over) 1.2}
     set soaking(temperature) $::Dflow_pouring_temperature
     set soaking(pressure) $::Dflow_soaking_pressure
