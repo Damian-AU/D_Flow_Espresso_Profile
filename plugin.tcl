@@ -8,7 +8,7 @@ namespace eval ::plugins::${plugin_name} {
     variable author "Damian Brakel"
     variable contact "via Diaspora"
     variable description "D-Flow is a simple to use advanced profile creating and editing tool"
-    variable version 2.7
+    variable version 2.9
     variable min_de1app_version {1.36.7}
 
 
@@ -340,7 +340,7 @@ proc update_D-Flow {} {
     if {$::Dflow_soaking_pressure < 2.8} {
         set filling(exit_pressure_over) $::Dflow_soaking_pressure
     } else {
-        set filling(exit_pressure_over) [round_to_one_digits [expr {($::Dflow_soaking_pressure / 2) + 0.5}]]
+        set filling(exit_pressure_over) [round_to_one_digits [expr {($::Dflow_soaking_pressure / 2) + 0.6}]]
     }
     if {$filling(exit_pressure_over) < 1.2} {set filling(exit_pressure_over) 1.2}
     set soaking(temperature) $::Dflow_pouring_temperature
@@ -769,7 +769,7 @@ dui add dbutton $page_name 1000 1250 \
 dui add dbutton $page_name 1000 1210 \
     -bwidth 150 -bheight 80 \
     -command {
-        dui page open_dialog dui_number_editor ::Dflow_soaking_volume -n_decimals 0 -min 80 -max 100 -default $::Dflow_soaking_volume -smallincrement 1 -bigincrement 10 -use_biginc 1 -page_title [translate "Maximum Infuse Volume"] -previous_values [::dui::pages::dui_number_editor::get_previous_values volume] -return_callback "dflow_callback callback_after_adv_profile_data_entry volume"
+        dui page open_dialog dui_number_editor ::Dflow_soaking_volume -n_decimals 0 -min 50 -max 127 -default $::Dflow_soaking_volume -smallincrement 1 -bigincrement 10 -use_biginc 1 -page_title [translate "Maximum Infuse Volume"] -previous_values [::dui::pages::dui_number_editor::get_previous_values volume] -return_callback "dflow_callback callback_after_adv_profile_data_entry volume"
     }
 
 dui add dbutton $page_name 1180 1050 \
@@ -1372,7 +1372,7 @@ add_de1_widget "settings_1" graph 1330 300 {
     $::Q_demo_graph axis configure x -color #5a5d75 -tickfont Helv_6;
     $::Q_demo_graph axis configure y -color #5a5d75 -tickfont Helv_6 -min 0.0 -max 12 -majorticks {1 2 3 4 5 6 7 8 9 10 11 12} -title [translate "D-Flow"] -titlefont Helv_8 -titlecolor #5a5d75;
     bind $::Q_demo_graph [platform_button_press] {}
-} -plotbackground #fff -width [rescale_x_skin 1050] -height [rescale_y_skin 420] -borderwidth 1 -background #FFFFFF -plotrelief raised  -plotpady 0 -plotpadx 10 -tags Q_demo_graph
+} -plotbackground #fff -width [rescale_x_skin 1050] -height [rescale_y_skin 420] -borderwidth 1 -background #FFFFFF -plotrelief raised  -plotpady 0 -plotpadx 10 -initial_state hidden -tags Q_demo_graph
 
 proc hide_Q_demo_graph {} {
     .can itemconfigure Q_demo_graph -state hidden
@@ -1403,7 +1403,7 @@ add_de1_widget "settings_1" graph 1330 300 {
     $::La_Pavoni_demo_graph axis configure x -color #5a5d75 -tickfont Helv_6;
     $::La_Pavoni_demo_graph axis configure y -color #5a5d75 -tickfont Helv_6 -min 0.0 -max 12 -majorticks {1 2 3 4 5 6 7 8 9 10 11 12} -title [translate "D-Flow"] -titlefont Helv_8 -titlecolor #5a5d75;
     bind $::La_Pavoni_demo_graph [platform_button_press] {}
-} -plotbackground #fff -width [rescale_x_skin 1050] -height [rescale_y_skin 420] -borderwidth 1 -background #FFFFFF -plotrelief raised  -plotpady 0 -plotpadx 10 -tags La_Pavoni_demo_graph
+} -plotbackground #fff -width [rescale_x_skin 1050] -height [rescale_y_skin 420] -borderwidth 1 -background #FFFFFF -plotrelief raised  -plotpady 0 -plotpadx 10 -initial_state hidden -tags La_Pavoni_demo_graph
 
 proc hide_La_Pavoni_demo_graph {} {
     .can itemconfigure La_Pavoni_demo_graph -state hidden
@@ -1431,13 +1431,26 @@ if {$::settings(skin) == "DSx"} {
 
 set ::Q_profile_notes ""
 set ::La_Pavoni_profile_notes ""
-add_de1_variable "settings_1" 1360 900 -text "" -font Helv_6 -fill "#7f879a" -justify "left" -anchor "nw"  -width [rescale_y_skin 1150] -textvariable {$::Q_profile_notes}
+add_de1_variable "settings_1" 1360 890 -text "" -font Helv_6 -fill "#7f879a" -justify "left" -anchor "nw"  -width [rescale_y_skin 1150] -textvariable {$::Q_profile_notes}
 add_de1_variable "settings_1" 1360 900 -text "" -font Helv_6 -fill "#7f879a" -justify "left" -anchor "nw"  -width [rescale_y_skin 1150] -textvariable {$::La_Pavoni_profile_notes}
-dui add dbutton "settings_1" 1350 820 2530 1180 -tags Q_notes_button -initial_state hidden -command{}
-dui add dbutton "settings_1" 1350 820 2530 1180 -tags La_Pavoni_notes_button -initial_state hidden -command{}
+dui add dbutton "settings_1" 1350 820 2530 1180 -tags Q_notes_button -initial_state hidden -command {web_browser "https://coffee.brakel.com.au/"}
+dui add dbutton "settings_1" 1350 820 2530 1180 -tags La_Pavoni_notes_button -initial_state hidden -command {web_browser "https://coffee.brakel.com.au/"}
 
+rename ::update_de1_explanation_chart ::update_de1_explanation_chart_default
+proc ::update_de1_explanation_chart {} {
+    if {$::settings(settings_profile_type) == "settings_2a" || $::settings(settings_profile_type) == "settings_2b"} {
+	    ::plugins::D_Flow_Espresso_Profile::hide_Q_demo_graph
+        ::plugins::D_Flow_Espresso_Profile::hide_La_Pavoni_demo_graph
+        set ::Q_profile_notes ""
+        set ::La_Pavoni_profile_notes ""
+        dui item config settings_1 Q_notes_button* -initial_state hidden -state hidden
+        dui item config settings_1 La_Pavoni_notes_button* -initial_state hidden -state hidden
+	}
+    ::update_de1_explanation_chart_default
+}
 rename ::update_de1_plus_advanced_explanation_chart ::update_de1_plus_advanced_explanation_chart_default
 proc ::update_de1_plus_advanced_explanation_chart {} {
+
 	set title_test [string range [ifexists ::settings(profile_title)] 0 7]
     if {$title_test == "D-Flow /" } {
         ::plugins::D_Flow_Espresso_Profile::demo_graph
@@ -1453,6 +1466,7 @@ Grind 10um causer than other profiles, more berry flavours from "Xtraction Blend
 The Preview graph above shows what a typical shot graph should look like
 
 The goal is to grind for a pressure peak between 6 and 9 bar
+     tap to visit "https://coffee.brakel.com.au/"
         }
         dui item config settings_1 Q_notes_button* -initial_state normal -state normal
     } elseif {$::settings(profile_title) == "D-Flow / La Pavoni" && [dui page current] == "settings_1"} {
