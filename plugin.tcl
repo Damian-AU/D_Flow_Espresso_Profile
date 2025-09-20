@@ -8,7 +8,7 @@ namespace eval ::plugins::${plugin_name} {
     variable author "Damian Brakel"
     variable contact "via Diaspora"
     variable description "D-Flow is a simple to use advanced profile creating and editing tool"
-    variable version 2.9
+    variable version 3.0
     variable min_de1app_version {1.36.7}
 
 
@@ -1332,7 +1332,7 @@ dui add dbutton Dflowset 760 570 \
     -shape outline -width 2 -outline #eee \
     -label "convert to\rAdvanced\rprofile" -label_font [dui font get Roboto-Regular 14] -label_fill #7f879a -label_pos {0.5 0.5} \
     -command {
-        save_D-Flow_to_Advanced
+        ::plugins::D_Flow_Espresso_Profile::save_D-Flow_to_Advanced
     }
 
 proc save_D-Flow_to_Advanced {} {
