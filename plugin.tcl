@@ -8,7 +8,7 @@ namespace eval ::plugins::${plugin_name} {
     variable author "Damian Brakel"
     variable contact "via Diaspora"
     variable description "D-Flow is a simple to use advanced profile creating and editing tool"
-    variable version 3.0
+    variable version 3.1
     variable min_de1app_version {1.36.7}
 
 
@@ -1241,7 +1241,6 @@ dui add dbutton settings_1 1100 526 \
             }
             dui page load Dflowset
         }
-        dui page load Dflowset
     }
 
 dui add dbutton "settings_1" 1330 220 \
